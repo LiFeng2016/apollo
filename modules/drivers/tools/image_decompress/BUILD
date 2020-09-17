@@ -1,3 +1,4 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("//tools:cpplint.bzl", "cpplint")
 
 package(default_visibility = ["//visibility:public"])
@@ -9,9 +10,11 @@ cc_library(
     copts = ['-DMODULE_NAME=\\"image_decompress\\"'],
     deps = [
         "//cyber",
-        "//modules/drivers/proto:sensor_proto",
-        "//modules/drivers/tools/image_decompress/proto:decompress_proto",
-        "@opencv",
+        "//modules/common/proto:error_code_cc_proto",
+        "//modules/common/proto:header_cc_proto",
+        "//modules/drivers/proto:sensor_image_cc_proto",
+        "//modules/drivers/tools/image_decompress/proto:config_cc_proto",
+        "@opencv//:imgcodecs",
     ],
 )
 
@@ -21,7 +24,7 @@ cc_test(
     srcs = ["image_decompress_test.cc"],
     deps = [
         ":image_decompress_lib",
-        "@gtest//:main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

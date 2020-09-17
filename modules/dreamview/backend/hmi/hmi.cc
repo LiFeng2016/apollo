@@ -97,7 +97,7 @@ void HMI::RegisterMessageHandlers() {
         // Extra works for current Dreamview.
         if (hmi_action == HMIAction::CHANGE_MAP) {
           // Reload simulation map after changing map.
-          CHECK(map_service_->ReloadMap(true))
+          ACHECK(map_service_->ReloadMap(true))
               << "Failed to load new simulation map: " << value;
         } else if (hmi_action == HMIAction::CHANGE_VEHICLE) {
           // Reload lidar params for point cloud service.
@@ -113,6 +113,34 @@ void HMI::RegisterMessageHandlers() {
           } else {
             data_collection_monitor_->Stop();
           }
+        }
+      });
+
+  // HMI client asks for adding new AudioEvent.
+  websocket_->RegisterMessageHandler(
+      "SubmitAudioEvent",
+      [this](const Json& json, WebSocketHandler::Connection* conn) {
+        // json should contain event_time_ms, obstacle_id, audio_type,
+        // moving_result, audio_direction and is_siren_on.
+        uint64_t event_time_ms;
+        int obstacle_id;
+        int audio_type;
+        int moving_result;
+        int audio_direction;
+        bool is_siren_on;
+        if (JsonUtil::GetNumber(json, "event_time_ms", &event_time_ms) &&
+            JsonUtil::GetNumber(json, "obstacle_id", &obstacle_id) &&
+            JsonUtil::GetNumber(json, "audio_type", &audio_type) &&
+            JsonUtil::GetNumber(json, "moving_result", &moving_result) &&
+            JsonUtil::GetNumber(json, "audio_direction", &audio_direction) &&
+            JsonUtil::GetBoolean(json, "is_siren_on", &is_siren_on)) {
+          hmi_worker_->SubmitAudioEvent(event_time_ms, obstacle_id, audio_type,
+                                        moving_result, audio_direction,
+                                        is_siren_on);
+          monitor_log_buffer_.INFO("Audio event added.");
+        } else {
+          AERROR << "Truncated SubmitAudioEvent request.";
+          monitor_log_buffer_.WARN("Failed to submit an audio event.");
         }
       });
 
